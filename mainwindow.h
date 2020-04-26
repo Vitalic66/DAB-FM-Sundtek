@@ -38,6 +38,12 @@ private slots:
 
     void tune();
 
+    void delete_line();
+
+    void fill_list();
+
+    void on_btn_delete_clicked();
+
 private:
     Ui::MainWindow *ui;
     QString path_dab = "../.dab.txt";

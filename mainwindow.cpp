@@ -35,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
         return;
     }
 
+
+    /*
     //FM
     QFile file_fm(path_fm);
 
@@ -43,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->warn_no_dab_list->setVisible(true);
         return;
     }
+    */
 
     // start DAB default ##################################################################################################################
 
@@ -97,6 +100,8 @@ MainWindow::MainWindow(QWidget *parent) :
       ui->ls_dab->addItem(dab[i][1]);
     }
     */
+
+    /*
     //FM
     QTextStream in_file_fm(&file_fm);
     QString text_fm;
@@ -114,11 +119,15 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     file_fm.close();
+    */
+
 /*
     for(int i = 0; i < fm.size(); i++){
       ui->ls_fm->addItem(fm[i][0]);
     }
     */
+
+    MainWindow::fill_list();
     MainWindow::fm_list();
 }
 
@@ -126,9 +135,9 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     //kill mediaclient on close, else sound goes on...
-    QProcess::execute("/opt/bin/mediaclient --shutdown");
     QProcess::execute("/opt/bin/mediaclient -m DAB -g on");
     QProcess::execute("/opt/bin/mediaclient -m RADIO -g on");
+    QProcess::execute("/opt/bin/mediaclient --shutdown");
 
     delete ui;
 }
@@ -489,7 +498,10 @@ void MainWindow::on_btn_scan_clicked()
         */
         MainWindow::fm_list();
     }
-}    
+}
+
+//#########################################################################################################################################
+//Qt Widgets and buttons
 
 void MainWindow::on_btn_tune_clicked()
 {
@@ -514,6 +526,11 @@ void MainWindow::on_ls_fm_itemSelectionChanged()
 void MainWindow::on_btn_clear_clicked()
 {
     MainWindow::testfunction();
+}
+
+void MainWindow::on_btn_delete_clicked()
+{
+    MainWindow::delete_line();
 }
 
 //#########################################################################################################################################
@@ -571,3 +588,86 @@ void MainWindow::tune(){
     }
     QProcess::execute("/opt/bin/mediaclient -m" + radio_dab_type + " -g off");
 }
+
+void MainWindow::delete_line(){
+
+    //FM
+    if (tgl_state == "FM"){
+        int ind_marked = ui->ls_fm->currentRow();
+        if(ind_marked > -1){
+            QString delete_marked = ui->ls_fm->currentItem()->text();
+
+            QFile out_tmp("../tmp.txt");
+            QFile file_fm(path_fm);
+                if(!file_fm.open(QFile::ReadOnly | QFile::Text)){
+                    //QMessageBox::warning(this,"..","keine datei gefunden");
+                    return;
+                }
+
+                 if(!out_tmp.open(QFile::WriteOnly | QFile::Text)){
+                     //QMessageBox::warning(this,"..","keine datei gefunden");
+                     return;
+                 }
+
+            QTextStream in_file_fm(&file_fm);
+            QTextStream out(&out_tmp);
+
+                while(!in_file_fm.atEnd()){
+                    QString line = in_file_fm.readLine();
+                    if(!line.contains(delete_marked, Qt::CaseSensitive)){
+                    QString outline = line;
+                            out << outline << "\n";
+                    }
+                }
+
+            file_fm.close();
+            out_tmp.flush();
+            out_tmp.close();
+
+            file_fm.remove();
+            out_tmp.rename(path_fm);
+
+            ui->ls_fm->clear();
+
+            MainWindow::fill_list();
+            MainWindow::fm_list();
+        }
+    }
+}
+
+void MainWindow::fill_list(){
+
+    //if (tgl_state == "FM"){
+
+        QFile file_fm(path_fm);
+
+        if(!file_fm.open(QFile::ReadOnly | QFile::Text)){
+            QMessageBox::warning(this,"no stationlist for FM found","no stationlist for FM found\nPlease hit scan in mode FM first!");
+            ui->warn_no_dab_list->setVisible(true);
+            return;
+        }
+
+        //FM
+        fm.clear();
+
+        QTextStream in_file_fm(&file_fm);
+        QString text_fm;
+
+        while (!in_file_fm.atEnd()) {
+                   text_fm = in_file_fm.readLine();
+
+                   QStringList split_text_fm = text_fm.split(",");
+
+                       QVector<QString> fm_row;
+
+                       fm_row.push_back(split_text_fm.at(0));
+                       fm_row.push_back(split_text_fm.at(1));
+                       fm.push_back(fm_row);
+        }
+
+        file_fm.close();
+   // }
+
+}
+
+
