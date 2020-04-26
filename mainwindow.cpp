@@ -627,6 +627,7 @@ void MainWindow::dab_list(){
 void MainWindow::tune(){
 
     QString radio_dab_type;
+
     //FM
     if (tgl_state == "FM"){
 
@@ -637,6 +638,7 @@ void MainWindow::tune(){
             freq = fm[ind_marked][1];
         }
     }
+
     //DAB
     if (tgl_state == "DAB"){
 
