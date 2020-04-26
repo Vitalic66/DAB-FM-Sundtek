@@ -637,7 +637,7 @@ void MainWindow::tune(){
             freq = fm[ind_marked][1];
         }
     }
-
+    //DAB
     if (tgl_state == "DAB"){
 
         radio_dab_type = "DAB";
