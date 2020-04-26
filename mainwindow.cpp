@@ -23,31 +23,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
-    //ui->warn_no_dab_list->setVisible(false);
-
-    //open both station lists #############################################################################################################
-    /*
-    //DAB
-    QFile file_dab(path_dab);
-
-    if(!file_dab.open(QFile::ReadOnly | QFile::Text)){
-        QMessageBox::warning(this,"no stationlist for DAB found","no stationlist for DAB found\nPlease hit scan in mode DAB first!");
-        //ui->warn_no_dab_list->setVisible(true);
-        return;
-    }
-    */
-
-    /*
-    //FM
-    QFile file_fm(path_fm);
-
-    if(!file_fm.open(QFile::ReadOnly | QFile::Text)){
-        QMessageBox::warning(this,"no stationlist for FM found","no stationlist for FM found\nPlease hit scan in mode FM first!");
-        ui->warn_no_dab_list->setVisible(true);
-        return;
-    }
-    */
-
     // start DAB default ##################################################################################################################
 
     tgl_state = "DAB";
@@ -59,79 +34,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->ls_dab->setVisible(true);
     ui->ls_fm->setVisible(false);
 
-    //enable tune button if line is selcted
-
-//    int ind_marked = ui->ls_dab->currentRow();
-//    if(ind_marked > 0){
-//    ui->btn_tune->setEnabled(true);
-//    }
-
-    //show saved stations from dab in list
-
-    //QFile file_dab(path_dab);
-    //if(!file_dab.open(QFile::ReadOnly | QFile::Text)){
-        //QMessageBox::warning(this,"..","keine datei gefunden");
-        //ui->warn_no_dab_list->setVisible(true);
-       // return;
-    //}
-
-    //fill lists ##########################################################################################################################
-    /*
-    //DAB
-    QTextStream in_file_dab(&file_dab);
-    QString text_dab;
-
-    while (!in_file_dab.atEnd()) {
-               text_dab = in_file_dab.readLine();
-
-               QStringList split_text_dab = text_dab.split(",");
-
-                   QVector<QString> dab_row;
-
-                   dab_row.push_back(split_text_dab.at(0));
-                   dab_row.push_back(split_text_dab.at(1));
-                   dab_row.push_back(split_text_dab.at(2));
-                   dab.push_back(dab_row);                 
-    }
-
-    file_dab.close();
-    */
-
     MainWindow::fill_list();
     MainWindow::dab_list();
-    /*
-    for(int i = 0; i < dab.size(); i++){
-      ui->ls_dab->addItem(dab[i][1]);
-    }
-    */
 
-    /*
-    //FM
-    QTextStream in_file_fm(&file_fm);
-    QString text_fm;
-
-    while (!in_file_fm.atEnd()) {
-               text_fm = in_file_fm.readLine();
-
-               QStringList split_text_fm = text_fm.split(",");
-
-                   QVector<QString> fm_row;
-
-                   fm_row.push_back(split_text_fm.at(0));
-                   fm_row.push_back(split_text_fm.at(1));
-                   fm.push_back(fm_row);
-    }
-
-    file_fm.close();
-    */
-
-/*
-    for(int i = 0; i < fm.size(); i++){
-      ui->ls_fm->addItem(fm[i][0]);
-    }
-    */
-
-    MainWindow::fill_list();
+    //MainWindow::fill_list();
     MainWindow::fm_list();
 }
 
@@ -163,10 +69,8 @@ void MainWindow::on_tgl_dab_fm_clicked()
     }
     //know which mode is selected (FM or DAB, default on start is DAB)
 
-    qDebug() << "state: " << tgl_state;
-    qDebug() << "button: " << ui->tgl_dab_fm->text();
-
-
+    //qDebug() << "state: " << tgl_state;
+    //qDebug() << "button: " << ui->tgl_dab_fm->text();
 }
 
 void MainWindow::on_btn_scan_clicked()
@@ -527,10 +431,10 @@ void MainWindow::on_ls_fm_itemSelectionChanged()
     ui->btn_tune->setEnabled(true);
 }
 
-void MainWindow::on_btn_clear_clicked()
-{
-    MainWindow::testfunction();
-}
+//void MainWindow::on_btn_clear_clicked()
+//{
+//    MainWindow::testfunction();
+//}
 
 void MainWindow::on_btn_delete_clicked()
 {
@@ -540,10 +444,10 @@ void MainWindow::on_btn_delete_clicked()
 //#########################################################################################################################################
 //functions
 
-void MainWindow::testfunction(){
+//void MainWindow::testfunction(){
 
-    QMessageBox::warning(this,"no stationlist for DAB found","no stationlist for DAB found\nPlease hit scan in mode DAB first!");
-}
+//    QMessageBox::warning(this,"no stationlist for DAB found","no stationlist for DAB found\nPlease hit scan in mode DAB first!");
+//}
 
 void MainWindow::fm_list(){
     for(int i = 0; i < fm.size(); i++){
@@ -588,9 +492,9 @@ void MainWindow::tune(){
     QProcess::execute("/opt/bin/mediaclient --start");
     QProcess::execute("/opt/bin/mediaclient -m" + radio_dab_type + " -f" + freq);
     if(tgl_state == "DAB"){
-        QProcess::execute("/opt/bin/mediaclient -m" + radio_dab_type + " -f " + freq + " --sid " + serv_id);
+        QProcess::execute("/opt/bin/mediaclient -m " + radio_dab_type + " -f " + freq + " --sid " + serv_id);
     }
-    QProcess::execute("/opt/bin/mediaclient -m" + radio_dab_type + " -g off");
+    QProcess::execute("/opt/bin/mediaclient -m " + radio_dab_type + " -g off");
 }
 
 void MainWindow::delete_line(){
@@ -632,6 +536,9 @@ void MainWindow::delete_line(){
             out_tmp.rename(path_dab);
 
             ui->ls_dab->clear();
+
+            //mute DAB stream, else deleted entry is still active
+            QProcess::execute("/opt/bin/mediaclient -m DAB -g on");
 
             MainWindow::fill_list();
             MainWindow::dab_list();
@@ -675,6 +582,9 @@ void MainWindow::delete_line(){
             out_tmp.rename(path_fm);
 
             ui->ls_fm->clear();
+
+            //mute RADIO stream, else deleted entry is still active
+            QProcess::execute("/opt/bin/mediaclient -m RADIO -g on");
 
             MainWindow::fill_list();
             MainWindow::fm_list();

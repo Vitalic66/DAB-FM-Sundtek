@@ -28,9 +28,9 @@ private slots:
 
     void on_ls_fm_itemSelectionChanged();
 
-    void on_btn_clear_clicked();
+//    void on_btn_clear_clicked();
 
-    void testfunction();
+//    void testfunction();
 
     void fm_list();
 
