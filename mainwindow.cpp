@@ -627,7 +627,7 @@ void MainWindow::dab_list(){
 void MainWindow::tune(){
 
     QString radio_dab_type;
-
+    //FM
     if (tgl_state == "FM"){
 
         radio_dab_type = "RADIO";
