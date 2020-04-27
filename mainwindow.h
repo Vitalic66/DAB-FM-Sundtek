@@ -28,6 +28,8 @@ private slots:
 
     void on_ls_fm_itemSelectionChanged();
 
+    void on_btn_rename_clicked();
+
 //    void on_btn_clear_clicked();
 
 //    void testfunction();
@@ -44,9 +46,7 @@ private slots:
 
     void on_btn_delete_clicked();
 
-    void rename();
-
-    void on_bt_rename_clicked();
+    void rename();    
 
 private:
     Ui::MainWindow *ui;

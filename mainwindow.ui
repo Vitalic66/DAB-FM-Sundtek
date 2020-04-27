@@ -118,7 +118,7 @@
       </widget>
      </item>
      <item row="3" column="2">
-      <widget class="QPushButton" name="bt_rename">
+      <widget class="QPushButton" name="btn_rename">
        <property name="minimumSize">
         <size>
          <width>90</width>
