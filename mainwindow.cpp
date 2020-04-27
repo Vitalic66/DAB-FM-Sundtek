@@ -35,6 +35,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->ls_dab->setVisible(true);
     ui->ls_fm->setVisible(false);
     ui->btn_rename->setVisible(false);
+    ui->ln_man_tune->setVisible(false);
+    ui->label->setVisible(false);
+    ui->btn_add->setVisible(false);
+    ui->btn_man_tune->setVisible(false);
 
     MainWindow::fill_list();
     MainWindow::dab_list();
@@ -64,12 +68,20 @@ void MainWindow::on_tgl_dab_fm_clicked()
         ui->ls_dab->setVisible(false);
         ui->ls_fm->setVisible(true);
         ui->btn_rename->setVisible(true);
+        ui->ln_man_tune->setVisible(true);
+        ui->label->setVisible(true);
+        ui->btn_add->setVisible(true);
+        ui->btn_man_tune->setVisible(true);
     } else {
         ui->tgl_dab_fm->setText("FM");
         tgl_state = "DAB";
         ui->ls_dab->setVisible(true);
         ui->ls_fm->setVisible(false);
         ui->btn_rename->setVisible(false);
+        ui->ln_man_tune->setVisible(false);
+        ui->label->setVisible(false);
+        ui->btn_add->setVisible(false);
+        ui->btn_man_tune->setVisible(false);
     }
     //know which mode is selected (FM or DAB, default on start is DAB)
 
