@@ -44,6 +44,10 @@ private slots:
 
     void on_btn_delete_clicked();
 
+    void rename();
+
+    void on_bt_rename_clicked();
+
 private:
     Ui::MainWindow *ui;
     QString path_dab = "../.dab.txt";
