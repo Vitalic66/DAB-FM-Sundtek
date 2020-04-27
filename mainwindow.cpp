@@ -450,6 +450,16 @@ void MainWindow::on_btn_rename_clicked()
     MainWindow::rename();
 }
 
+void MainWindow::on_btn_add_clicked()
+{
+    MainWindow::add_station();
+}
+
+void MainWindow::on_btn_man_tune_clicked()
+{
+
+}
+
 //#########################################################################################################################################
 //functions
 
@@ -727,6 +737,72 @@ void MainWindow::rename(){
         }
     }
 }
+
+void MainWindow::add_station(){
+
+    //FM ##################################################################################################################################
+    if (tgl_state == "FM"){
+
+        ui->btn_rename->setVisible(true);
+
+        QString add_station = ui->ln_man_tune->text();
+        float add_station_float = add_station.toFloat();
+        int multi = add_station_float * 1000000;
+        QString station_conv_string = (QString::number(multi));
+
+        if(!add_station.isEmpty()){
+            QFile out_tmp("../tmp.txt");
+            QFile file_fm(path_fm);
+
+            if(!file_fm.open(QFile::ReadOnly | QFile::Text)){
+                //QMessageBox::warning(this,"..","keine datei gefunden");
+                return;
+            }
+
+            if(!out_tmp.open(QFile::WriteOnly | QFile::Text)){
+                 //QMessageBox::warning(this,"..","keine datei gefunden");
+                return;
+            }
+
+            QTextStream in_file_fm(&file_fm);
+            QTextStream out(&out_tmp);
+
+            while(!in_file_fm.atEnd()){
+                QString line = in_file_fm.readLine();
+                //if(!line.contains(delete_marked, Qt::CaseSensitive)){
+                QStringList line_split = line.split(",");
+
+                QString outline = line;
+                        out << outline << "\n";
+            }
+
+            if(add_station.contains(",")){
+                add_station = add_station.replace(",", ".");
+            }
+            if(!add_station.contains(".")){
+                add_station = add_station.append(".0");
+            }
+
+            //add new station at end of file
+            QString outline = "man station@ " + add_station + "MHz," + station_conv_string;
+                    out << outline << "\n";
+
+            file_fm.close();
+            out_tmp.flush();
+            out_tmp.close();
+
+            file_fm.remove();
+            out_tmp.rename(path_fm);
+
+            ui->ls_fm->clear();
+
+            MainWindow::fill_list();
+            MainWindow::fm_list();
+        }
+    }
+}
+
+
 
 
 

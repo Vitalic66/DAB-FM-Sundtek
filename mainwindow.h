@@ -30,6 +30,12 @@ private slots:
 
     void on_btn_rename_clicked();
 
+    void on_btn_delete_clicked();
+
+    void on_btn_add_clicked();
+
+    void on_btn_man_tune_clicked();
+
 //    void on_btn_clear_clicked();
 
 //    void testfunction();
@@ -44,9 +50,9 @@ private slots:
 
     void fill_list();
 
-    void on_btn_delete_clicked();
+    void rename();
 
-    void rename();    
+    void add_station();
 
 private:
     Ui::MainWindow *ui;
