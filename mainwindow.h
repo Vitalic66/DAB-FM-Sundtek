@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QListWidgetItem>
 
 namespace Ui {
 class MainWindow;
@@ -28,6 +29,8 @@ private slots:
 
     void on_ls_fm_itemSelectionChanged();
 
+    void on_ls_dab_itemSelectionChanged();
+
     void on_btn_rename_clicked();
 
     void on_btn_delete_clicked();
@@ -53,6 +56,10 @@ private slots:
     void rename();
 
     void add_station();
+
+    //void on_ls_dab_itemPressed(QListWidgetItem *item);
+
+    //void on_ls_fm_itemPressed(QListWidgetItem *item);
 
 private:
     Ui::MainWindow *ui;

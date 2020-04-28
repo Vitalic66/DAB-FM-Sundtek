@@ -11,6 +11,7 @@
 #include <QThread>
 #include <QDir>
 #include <QInputDialog>
+#include <QListWidgetItem>
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -40,6 +41,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->btn_add->setVisible(false);
     ui->btn_man_tune->setVisible(false);
 
+    //disable tunebutton on start
+    ui->btn_tune->setDisabled(true);
+
     MainWindow::fill_list();
     MainWindow::dab_list();
 
@@ -60,8 +64,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_tgl_dab_fm_clicked()
 {
-    //tgl_state = "FM";
-
     if(ui->tgl_dab_fm->text() == "FM"){
         ui->tgl_dab_fm->setText("DAB");
         tgl_state = "FM";
@@ -83,10 +85,26 @@ void MainWindow::on_tgl_dab_fm_clicked()
         ui->btn_add->setVisible(false);
         ui->btn_man_tune->setVisible(false);
     }
-    //know which mode is selected (FM or DAB, default on start is DAB)
 
-    //qDebug() << "state: " << tgl_state;
-    //qDebug() << "button: " << ui->tgl_dab_fm->text();
+    //enable/disable tune button depending on station selected or not
+    int init_fm_list = ui->ls_fm->currentRow();
+    int init_dab_list = ui->ls_dab->currentRow();
+
+    if(init_fm_list == -1 && tgl_state == "FM"){
+        ui->btn_tune->setDisabled(true);
+    }
+
+    if(init_fm_list != -1 && tgl_state == "FM"){
+        ui->btn_tune->setDisabled(false);
+    }
+
+    if(init_dab_list == -1 && tgl_state == "DAB"){
+        ui->btn_tune->setDisabled(true);
+    }
+
+    if(init_dab_list != -1 && tgl_state == "DAB"){
+        ui->btn_tune->setDisabled(false);
+    }
 }
 
 void MainWindow::on_btn_scan_clicked()
@@ -447,6 +465,11 @@ void MainWindow::on_ls_fm_itemSelectionChanged()
     ui->btn_tune->setEnabled(true);
 }
 
+void MainWindow::on_ls_dab_itemSelectionChanged()
+{
+    ui->btn_tune->setEnabled(true);
+}
+
 //void MainWindow::on_btn_clear_clicked()
 //{
 //    MainWindow::testfunction();
@@ -483,12 +506,14 @@ void MainWindow::on_btn_man_tune_clicked()
 void MainWindow::fm_list(){
     for(int i = 0; i < fm.size(); i++){
       ui->ls_fm->addItem(fm[i][0]);
+      ui->ls_fm->sortItems(Qt::AscendingOrder);
     }
 }
 
 void MainWindow::dab_list(){
     for(int i = 0; i < dab.size(); i++){
       ui->ls_dab->addItem(dab[i][1]);
+      ui->ls_dab->sortItems(Qt::AscendingOrder);
     }
 }
 
@@ -501,11 +526,11 @@ void MainWindow::tune(){
 
         radio_dab_type = "DAB";
         int ind_marked = ui->ls_dab->currentRow();
-        if(ind_marked > -1){
+//        if(ind_marked > -1){
 
             freq = dab[ind_marked][0];
             serv_id = dab[ind_marked][2];
-        }
+//        }
     }
 
     //FM ##################################################################################################################################
@@ -513,10 +538,10 @@ void MainWindow::tune(){
 
         radio_dab_type = "RADIO";
         int ind_marked = ui->ls_fm->currentRow();
-        if(ind_marked > -1){
+        //if(ind_marked > -1){
 
             freq = fm[ind_marked][1];
-        }
+        //}
     }
 
     //start mediaclient in case it did not...
@@ -533,7 +558,7 @@ void MainWindow::delete_line(){
     //DAB #################################################################################################################################
     if (tgl_state == "DAB"){
         int ind_marked = ui->ls_dab->currentRow();
-        if(ind_marked > -1){
+        //if(ind_marked > -1){
             QString delete_marked = ui->ls_dab->currentItem()->text();
 
             QFile out_tmp("../tmp.txt");
@@ -573,13 +598,13 @@ void MainWindow::delete_line(){
 
             MainWindow::fill_list();
             MainWindow::dab_list();
-        }
+        //}
     }
 
     //FM ##################################################################################################################################
     if (tgl_state == "FM"){
         int ind_marked = ui->ls_fm->currentRow();
-        if(ind_marked > -1){
+        //if(ind_marked > -1){
             QString delete_marked = ui->ls_fm->currentItem()->text();
 
             QFile out_tmp("../tmp.txt");
@@ -620,7 +645,7 @@ void MainWindow::delete_line(){
             MainWindow::fill_list();
             MainWindow::fm_list();
         }
-    }
+    //}
 }
 
 void MainWindow::fill_list(){
@@ -813,9 +838,14 @@ void MainWindow::add_station(){
         }
     }
 }
+/*
+void MainWindow::on_ls_dab_itemPressed(QListWidgetItem *item)
+{
+    //ui->btn_tune->setDisabled(false);
+}
 
-
-
-
-
-
+void MainWindow::on_ls_fm_itemPressed(QListWidgetItem *item)
+{
+    //ui->btn_tune->setDisabled(false);
+}
+*/
