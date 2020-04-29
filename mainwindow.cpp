@@ -212,6 +212,9 @@ void MainWindow::on_btn_scan_clicked()
             QString holder = locked_dab.at(i);
             //int hold = holder.toInt;
             QString fr = locked_freq_dab.at(holder.toInt());
+
+            //todo only removes first 3 e.g. 5A_ but not 13A_
+
             fr = fr.remove(0, 3);
             freq_avail.append(fr);
 
@@ -236,6 +239,8 @@ void MainWindow::on_btn_scan_clicked()
         QTextStream out(&file_dab);
 
         //QString transponder = trans.at(0);
+        QStringList unsort_scan_dab;
+
         for(int i = 0; i < freq_avail.size(); i++){
 
 //                QProcess::execute("/opt/bin/mediaclient -m DAB -f " + freq_avail.at(i));
@@ -259,6 +264,7 @@ void MainWindow::on_btn_scan_clicked()
             process_dab_trans_2.close();
 
             QTextStream stream_dab_trans(&output_dab_trans);
+            //QStringList unsort_scan_dab;
 
             //QString line_dab_trans;
 
@@ -276,6 +282,7 @@ void MainWindow::on_btn_scan_clicked()
                           }
 
                           QString service_name = line_dab_trans.left(line_dab_trans.indexOf(QLatin1String("0x")));
+                          //QStringList unsort_scan_dab;
 
                           /*
                           QStringList one_line = line_dab_trans.split('\t');
@@ -288,18 +295,30 @@ void MainWindow::on_btn_scan_clicked()
                           //QString outline = line;
 
                           //if(service_name != "Service Name"){
-                              out << freq_avail.at(i) << "," << service_name << "," << matched << "\n";
-                              qDebug() << freq_avail.at(i) << service_name << matched;
+                              ////out << freq_avail.at(i) << "," << service_name << "," << matched << "\n";
+                          QString tmp = service_name + "," + freq_avail.at(i) + "," + matched;
+                          unsort_scan_dab.append(tmp);
+                              //qDebug() << freq_avail.at(i) << service_name << matched;
                           //}
 
                            //clear line_dab_trans at the end, else only transponders from frequency #0 aer listed
                           line_dab_trans.clear();
                       }
                 }
+
         }
+        QStringList list {MainWindow::sort_list(unsort_scan_dab)};
+
+        foreach(QString dab_line_sort, list){
+            out << dab_line_sort << "\n";
+        }
+
+
 
         file_dab.flush();
         file_dab.close();
+
+
         //nochmal prüfen ob notwendig...
         if(!file_dab.open(QFile::ReadOnly | QFile::Text)){
             //QMessageBox::warning(this,"no stationfile found","Please hit scan first!");
@@ -309,8 +328,6 @@ void MainWindow::on_btn_scan_clicked()
 
         QTextStream in_file(&file_dab);
         QString text;
-
-
 
         while (!in_file.atEnd()) {
                    text = in_file.readLine();
@@ -334,11 +351,7 @@ void MainWindow::on_btn_scan_clicked()
         file_dab.close();
 
         MainWindow::dab_list();
-/*
-        for(int i = 0; i < dab.size(); i++){
-          ui->ls_dab->addItem(dab[i][1]);
-        }
-        */
+
     }
     //FM scan #############################################################################################################################
 
@@ -381,7 +394,7 @@ void MainWindow::on_btn_scan_clicked()
             return;
         }
         QTextStream out(&file_fm);
-        QList<QString> unsort_scan_fm;
+        QStringList unsort_scan_fm;
 
         for(int i = 0; i < line_count_fm; i++){
             QString tmp = console_find_freq.readLine();
@@ -399,10 +412,10 @@ void MainWindow::on_btn_scan_clicked()
                 //qDebug() << "unsort list:" << unsort_scan_fm;
             }
         }
-        //sort
-        QList<QString> sort_list {MainWindow::sort_list(unsort_scan_fm)};
-        //return from func
-        foreach(QString fm_line_sort, sort_list){
+
+        QStringList list {MainWindow::sort_list(unsort_scan_fm)};
+
+        foreach(QString fm_line_sort, list){
             out << fm_line_sort << "\n";
         }
 
@@ -506,7 +519,7 @@ void MainWindow::fm_list(){
 
 void MainWindow::dab_list(){
     for(int i = 0; i < dab.size(); i++){
-      ui->ls_dab->addItem(dab[i][1]);
+      ui->ls_dab->addItem(dab[i][0]);
       //ui->ls_dab->sortItems(Qt::AscendingOrder);
     }
 }
@@ -522,7 +535,7 @@ void MainWindow::tune(){
         int ind_marked = ui->ls_dab->currentRow();
 //        if(ind_marked > -1){
 
-            freq = dab[ind_marked][0];
+            freq = dab[ind_marked][1];
             serv_id = dab[ind_marked][2];
 //        }
     }
@@ -551,7 +564,7 @@ void MainWindow::delete_line(){
 
     //DAB #################################################################################################################################
     if (tgl_state == "DAB"){
-        int ind_marked = ui->ls_dab->currentRow();
+        //int ind_marked = ui->ls_dab->currentRow();
         //if(ind_marked > -1){
             QString delete_marked = ui->ls_dab->currentItem()->text();
 
@@ -588,6 +601,7 @@ void MainWindow::delete_line(){
             ui->ls_dab->clear();
 
             //mute DAB stream, else deleted entry is still active
+            //todo, mute only if station to delete is played station
             QProcess::execute("/opt/bin/mediaclient -m DAB -g on");
 
             MainWindow::fill_list();
@@ -597,7 +611,7 @@ void MainWindow::delete_line(){
 
     //FM ##################################################################################################################################
     if (tgl_state == "FM"){
-        int ind_marked = ui->ls_fm->currentRow();
+        //int ind_marked = ui->ls_fm->currentRow();
         //if(ind_marked > -1){
             QString delete_marked = ui->ls_fm->currentItem()->text();
 
@@ -634,6 +648,7 @@ void MainWindow::delete_line(){
             ui->ls_fm->clear();
 
             //mute RADIO stream, else deleted entry is still active
+            //todo, mute only if station to delete is played station
             QProcess::execute("/opt/bin/mediaclient -m RADIO -g on");
 
             MainWindow::fill_list();
@@ -737,20 +752,16 @@ void MainWindow::rename(){
                 QStringList unsort_rename_fm;
 
                     while(!in_file_fm.atEnd()){
-                        QString line = in_file_fm.readLine();
-                        //if(!line.contains(delete_marked, Qt::CaseSensitive)){
+                        QString line = in_file_fm.readLine();                        
                         QStringList line_split = line.split(",");
                         if(line_split.at(0) == rename_marked){
 
-                        QString outline = new_name + "," + line_split.at(1);
-                                //out << outline << "\n";
+                        QString outline = new_name + "," + line_split.at(1);                                
                             unsort_rename_fm.append(outline);
                         } else {
-                        QString outline = line;
-                                //out << outline << "\n";
+                        QString outline = line;                                
                             unsort_rename_fm.append(outline);
                         }
-
                     }
 
                 QStringList list {MainWindow::sort_list(unsort_rename_fm)};
@@ -866,6 +877,5 @@ QStringList MainWindow::sort_list(QStringList list){
     std::sort(list.begin(), list.end(), [&](const QString& s1, const QString& s2){ return coll.compare(s1, s2) < 0; });
 
     return list;
-
 }
 
