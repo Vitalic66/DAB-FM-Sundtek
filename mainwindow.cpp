@@ -12,13 +12,18 @@
 #include <QDir>
 #include <QInputDialog>
 #include <QListWidgetItem>
+#include <QCollator>
+
+//#include <iostream>
+//#include <algorithm>
+
+using namespace std;
 
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-
     //start mediaclient in case it did not...
     QProcess::execute("/opt/bin/mediaclient --start");
     QThread::msleep(3000);
@@ -376,6 +381,7 @@ void MainWindow::on_btn_scan_clicked()
             return;
         }
         QTextStream out(&file_fm);
+        QList<QString> unsort_scan_fm;
 
         for(int i = 0; i < line_count_fm; i++){
             QString tmp = console_find_freq.readLine();
@@ -387,20 +393,19 @@ void MainWindow::on_btn_scan_clicked()
                 //QString mhz_str = QString::number(mhz).right();
                 tmp = "Station " + QString::number(i-1) + " " + QString::number(mhz) + " MHz," + tmp;
 
-                out << tmp << "\n";
-//                QStringList split_tmp = tmp.split(",");
-//                qDebug() << "split_tmp:" << split_tmp;
-//                fm_row.push_back(split_tmp.at(0));
-//                fm_row.push_back(split_tmp.at(1));
+                //out << tmp << "\n";
 
-//                fm.push_back(fm_row);
+                unsort_scan_fm.append(tmp);
+                //qDebug() << "unsort list:" << unsort_scan_fm;
             }
-
-            //qDebug() << "fm_row" << fm_row;
-            //qDebug() << "fm" << fm;
-            //qDebug() << "station found" << fm;
-
         }
+        //sort
+        QList<QString> sort_list {MainWindow::sort_list(unsort_scan_fm)};
+        //return from func
+        foreach(QString fm_line_sort, sort_list){
+            out << fm_line_sort << "\n";
+        }
+
         file_fm.flush();
         file_fm.close();
 
@@ -432,12 +437,6 @@ void MainWindow::on_btn_scan_clicked()
                    }
         file_fm.close();
 
-        //add frequencies to list #########################################################################################################
-        /*
-        for(int i = 0; i < fm.size(); i++){
-          ui->ls_fm->addItem(fm[i][0]);
-        }
-        */
         MainWindow::fm_list();
     }
 }
@@ -470,11 +469,6 @@ void MainWindow::on_ls_dab_itemSelectionChanged()
     ui->btn_tune->setEnabled(true);
 }
 
-//void MainWindow::on_btn_clear_clicked()
-//{
-//    MainWindow::testfunction();
-//}
-
 void MainWindow::on_btn_delete_clicked()
 {
     MainWindow::delete_line();
@@ -506,14 +500,14 @@ void MainWindow::on_btn_man_tune_clicked()
 void MainWindow::fm_list(){
     for(int i = 0; i < fm.size(); i++){
       ui->ls_fm->addItem(fm[i][0]);
-      ui->ls_fm->sortItems(Qt::AscendingOrder);
+      //ui->ls_fm->sortItems(Qt::AscendingOrder);
     }
 }
 
 void MainWindow::dab_list(){
     for(int i = 0; i < dab.size(); i++){
       ui->ls_dab->addItem(dab[i][1]);
-      ui->ls_dab->sortItems(Qt::AscendingOrder);
+      //ui->ls_dab->sortItems(Qt::AscendingOrder);
     }
 }
 
@@ -740,6 +734,7 @@ void MainWindow::rename(){
 
                 QTextStream in_file_fm(&file_fm);
                 QTextStream out(&out_tmp);
+                QStringList unsort_rename_fm;
 
                     while(!in_file_fm.atEnd()){
                         QString line = in_file_fm.readLine();
@@ -748,13 +743,21 @@ void MainWindow::rename(){
                         if(line_split.at(0) == rename_marked){
 
                         QString outline = new_name + "," + line_split.at(1);
-                                out << outline << "\n";
+                                //out << outline << "\n";
+                            unsort_rename_fm.append(outline);
                         } else {
                         QString outline = line;
-                                out << outline << "\n";
+                                //out << outline << "\n";
+                            unsort_rename_fm.append(outline);
                         }
 
                     }
+
+                QStringList list {MainWindow::sort_list(unsort_rename_fm)};
+
+                foreach(QString fm_line_sort, list){
+                    out << fm_line_sort << "\n";
+                }
 
                 file_fm.close();
                 out_tmp.flush();
@@ -802,15 +805,23 @@ void MainWindow::add_station(){
             }
 
             QTextStream in_file_fm(&file_fm);
+            file_fm.resize(0);
             QTextStream out(&out_tmp);
+
+            QStringList unsort_add_fm;
+
+            QCollator coll;
+            coll.setNumericMode(true);
 
             while(!in_file_fm.atEnd()){
                 QString line = in_file_fm.readLine();
                 //if(!line.contains(delete_marked, Qt::CaseSensitive)){
-                QStringList line_split = line.split(",");
+                //QStringList line_split = line.split(",");
 
                 QString outline = line;
-                        out << outline << "\n";
+                        //out << outline << "\n";
+
+                unsort_add_fm.append(outline);
             }
 
             if(add_station.contains(",")){
@@ -822,13 +833,21 @@ void MainWindow::add_station(){
 
             //add new station at end of file
             QString outline = "man station@ " + add_station + "MHz," + station_conv_string;
-                    out << outline << "\n";
+                    //out << outline << "\n";
+
+            unsort_add_fm.append(outline);
+
+            QStringList list {MainWindow::sort_list(unsort_add_fm)};
+
+            foreach(QString fm_line_sort, list){
+                out << fm_line_sort << "\n";
+            }
 
             file_fm.close();
             out_tmp.flush();
             out_tmp.close();
 
-            file_fm.remove();
+            file_fm.remove();            
             out_tmp.rename(path_fm);
 
             ui->ls_fm->clear();
@@ -838,14 +857,15 @@ void MainWindow::add_station(){
         }
     }
 }
-/*
-void MainWindow::on_ls_dab_itemPressed(QListWidgetItem *item)
-{
-    //ui->btn_tune->setDisabled(false);
+
+QStringList MainWindow::sort_list(QStringList list){
+
+    QCollator coll;
+    coll.setNumericMode(true);
+
+    std::sort(list.begin(), list.end(), [&](const QString& s1, const QString& s2){ return coll.compare(s1, s2) < 0; });
+
+    return list;
+
 }
 
-void MainWindow::on_ls_fm_itemPressed(QListWidgetItem *item)
-{
-    //ui->btn_tune->setDisabled(false);
-}
-*/

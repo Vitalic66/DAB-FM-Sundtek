@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QListWidgetItem>
+//#include <iostream>
+//#include <algorithm>
 
 namespace Ui {
 class MainWindow;
@@ -56,6 +58,8 @@ private slots:
     void rename();
 
     void add_station();
+
+    QStringList sort_list(QStringList list);
 
     //void on_ls_dab_itemPressed(QListWidgetItem *item);
 
