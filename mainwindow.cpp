@@ -212,10 +212,15 @@ void MainWindow::on_btn_scan_clicked()
             QString holder = locked_dab.at(i);
             //int hold = holder.toInt;
             QString fr = locked_freq_dab.at(holder.toInt());
+            QStringRef fr_part = fr.leftRef(4);
 
-            //todo only removes first 3 e.g. 5A_ but not 13A_
+            if(fr_part.contains(" ")){
+                fr = fr.remove(0, 3);
+            } else {
+                //untested, no freq here with more then 3 characters in front
+                fr = fr.remove(0, 4);
+            }
 
-            fr = fr.remove(0, 3);
             freq_avail.append(fr);
 
 
@@ -313,8 +318,6 @@ void MainWindow::on_btn_scan_clicked()
             out << dab_line_sort << "\n";
         }
 
-
-
         file_dab.flush();
         file_dab.close();
 
@@ -383,9 +386,6 @@ void MainWindow::on_btn_scan_clicked()
             QString line_fm = console_count_lines_fm.readLine();
             line_count_fm++;
         }
-        //qDebug() << "line_count_fm" << line_count_fm;
-
-        //open file to write found freq
 
         QFile file_fm(path_fm);
         if(!file_fm.open(QFile::WriteOnly | QFile::Text)){
@@ -433,21 +433,20 @@ void MainWindow::on_btn_scan_clicked()
         QTextStream in_file_fm(&file_fm);
 
         while (!in_file_fm.atEnd()) {
-                   QString text_fm = in_file_fm.readLine();
+            QString text_fm = in_file_fm.readLine();
 
-                   QStringList split_text_fm = text_fm.split(",");
-                   qDebug() << split_text_fm;
+            QStringList split_text_fm = text_fm.split(",");
+            //qDebug() << split_text_fm;
 
-                       QVector<QString> fm_row;
+            QVector<QString> fm_row;
 
-                       fm_row.push_back(split_text_fm.at(0));
-                       fm_row.push_back(split_text_fm.at(1));
+            fm_row.push_back(split_text_fm.at(0));
+            fm_row.push_back(split_text_fm.at(1));
 
+            fm.push_back(fm_row);
+            //qDebug() << "fm scan" << fm;
 
-                       fm.push_back(fm_row);
-                       qDebug() << "fm scan" << fm;
-
-                   }
+        }
         file_fm.close();
 
         MainWindow::fm_list();
@@ -547,7 +546,7 @@ void MainWindow::tune(){
         int ind_marked = ui->ls_fm->currentRow();
         //if(ind_marked > -1){
 
-            freq = fm[ind_marked][1];
+        freq = fm[ind_marked][1];
         //}
     }
 
@@ -564,97 +563,94 @@ void MainWindow::delete_line(){
 
     //DAB #################################################################################################################################
     if (tgl_state == "DAB"){
-        //int ind_marked = ui->ls_dab->currentRow();
-        //if(ind_marked > -1){
-            QString delete_marked = ui->ls_dab->currentItem()->text();
 
-            QFile out_tmp("../tmp.txt");
-            QFile file_dab(path_dab);
-                if(!file_dab.open(QFile::ReadOnly | QFile::Text)){
-                    //QMessageBox::warning(this,"..","keine datei gefunden");
-                    return;
-                }
+        QString delete_marked = ui->ls_dab->currentItem()->text();
 
-                 if(!out_tmp.open(QFile::WriteOnly | QFile::Text)){
-                     //QMessageBox::warning(this,"..","keine datei gefunden");
-                     return;
-                 }
+        QFile out_tmp("../tmp.txt");
+        QFile file_dab(path_dab);
 
-            QTextStream in_file_dab(&file_dab);
-            QTextStream out(&out_tmp);
+        if(!file_dab.open(QFile::ReadOnly | QFile::Text)){
+            //QMessageBox::warning(this,"..","keine datei gefunden");
+            return;
+        }
 
-                while(!in_file_dab.atEnd()){
-                    QString line = in_file_dab.readLine();
-                    if(!line.contains(delete_marked, Qt::CaseSensitive)){
-                    QString outline = line;
-                            out << outline << "\n";
-                    }
-                }
+         if(!out_tmp.open(QFile::WriteOnly | QFile::Text)){
+             //QMessageBox::warning(this,"..","keine datei gefunden");
+             return;
+         }
 
-            file_dab.close();
-            out_tmp.flush();
-            out_tmp.close();
+        QTextStream in_file_dab(&file_dab);
+        QTextStream out(&out_tmp);
 
-            file_dab.remove();
-            out_tmp.rename(path_dab);
+        while(!in_file_dab.atEnd()){
+            QString line = in_file_dab.readLine();
+            if(!line.contains(delete_marked, Qt::CaseSensitive)){
+            QString outline = line;
+                    out << outline << "\n";
+            }
+        }
 
-            ui->ls_dab->clear();
+        file_dab.close();
+        out_tmp.flush();
+        out_tmp.close();
 
-            //mute DAB stream, else deleted entry is still active
-            //todo, mute only if station to delete is played station
-            QProcess::execute("/opt/bin/mediaclient -m DAB -g on");
+        file_dab.remove();
+        out_tmp.rename(path_dab);
 
-            MainWindow::fill_list();
-            MainWindow::dab_list();
-        //}
+        ui->ls_dab->clear();
+
+        //mute DAB stream, else deleted entry is still active
+        //todo, mute only if station to delete is played station
+        QProcess::execute("/opt/bin/mediaclient -m DAB -g on");
+
+        MainWindow::fill_list();
+        MainWindow::dab_list();
     }
 
     //FM ##################################################################################################################################
     if (tgl_state == "FM"){
-        //int ind_marked = ui->ls_fm->currentRow();
-        //if(ind_marked > -1){
-            QString delete_marked = ui->ls_fm->currentItem()->text();
 
-            QFile out_tmp("../tmp.txt");
-            QFile file_fm(path_fm);
-                if(!file_fm.open(QFile::ReadOnly | QFile::Text)){
-                    //QMessageBox::warning(this,"..","keine datei gefunden");
-                    return;
-                }
+        QString delete_marked = ui->ls_fm->currentItem()->text();
 
-                 if(!out_tmp.open(QFile::WriteOnly | QFile::Text)){
-                     //QMessageBox::warning(this,"..","keine datei gefunden");
-                     return;
-                 }
-
-            QTextStream in_file_fm(&file_fm);
-            QTextStream out(&out_tmp);
-
-                while(!in_file_fm.atEnd()){
-                    QString line = in_file_fm.readLine();
-                    if(!line.contains(delete_marked, Qt::CaseSensitive)){
-                    QString outline = line;
-                            out << outline << "\n";
-                    }
-                }
-
-            file_fm.close();
-            out_tmp.flush();
-            out_tmp.close();
-
-            file_fm.remove();
-            out_tmp.rename(path_fm);
-
-            ui->ls_fm->clear();
-
-            //mute RADIO stream, else deleted entry is still active
-            //todo, mute only if station to delete is played station
-            QProcess::execute("/opt/bin/mediaclient -m RADIO -g on");
-
-            MainWindow::fill_list();
-            MainWindow::fm_list();
+        QFile out_tmp("../tmp.txt");
+        QFile file_fm(path_fm);
+        if(!file_fm.open(QFile::ReadOnly | QFile::Text)){
+            //QMessageBox::warning(this,"..","keine datei gefunden");
+            return;
         }
-    //}
+
+         if(!out_tmp.open(QFile::WriteOnly | QFile::Text)){
+             //QMessageBox::warning(this,"..","keine datei gefunden");
+             return;
+         }
+
+        QTextStream in_file_fm(&file_fm);
+        QTextStream out(&out_tmp);
+
+        while(!in_file_fm.atEnd()){
+            QString line = in_file_fm.readLine();
+            if(!line.contains(delete_marked, Qt::CaseSensitive)){
+            QString outline = line;
+                    out << outline << "\n";
+            }
+        }
+
+        file_fm.close();
+        out_tmp.flush();
+        out_tmp.close();
+
+        file_fm.remove();
+        out_tmp.rename(path_fm);
+
+        ui->ls_fm->clear();
+
+        //mute RADIO stream, else deleted entry is still active
+        //todo, mute only if station to delete is played station
+        QProcess::execute("/opt/bin/mediaclient -m RADIO -g on");
+
+        MainWindow::fill_list();
+        MainWindow::fm_list();
+    }
 }
 
 void MainWindow::fill_list(){
@@ -675,21 +671,22 @@ void MainWindow::fill_list(){
     QString text_dab;
 
     while (!in_file_dab.atEnd()) {
-               text_dab = in_file_dab.readLine();
 
-               QStringList split_text_dab = text_dab.split(",");
+       text_dab = in_file_dab.readLine();
 
-                   QVector<QString> dab_row;
+       QStringList split_text_dab = text_dab.split(",");
 
-                   dab_row.push_back(split_text_dab.at(0));
-                   dab_row.push_back(split_text_dab.at(1));
-                   dab_row.push_back(split_text_dab.at(2));
-                   dab.push_back(dab_row);
+       QVector<QString> dab_row;
+
+       dab_row.push_back(split_text_dab.at(0));
+       dab_row.push_back(split_text_dab.at(1));
+       dab_row.push_back(split_text_dab.at(2));
+       dab.push_back(dab_row);
     }
 
     file_dab.close();
 
-     //FM #################################################################################################################################
+    //FM ##################################################################################################################################
 
     QFile file_fm(path_fm);
 
@@ -705,15 +702,16 @@ void MainWindow::fill_list(){
     QString text_fm;
 
     while (!in_file_fm.atEnd()) {
-               text_fm = in_file_fm.readLine();
 
-               QStringList split_text_fm = text_fm.split(",");
+       text_fm = in_file_fm.readLine();
 
-                   QVector<QString> fm_row;
+       QStringList split_text_fm = text_fm.split(",");
 
-                   fm_row.push_back(split_text_fm.at(0));
-                   fm_row.push_back(split_text_fm.at(1));
-                   fm.push_back(fm_row);
+       QVector<QString> fm_row;
+
+       fm_row.push_back(split_text_fm.at(0));
+       fm_row.push_back(split_text_fm.at(1));
+       fm.push_back(fm_row);
     }
 
     file_fm.close();
@@ -726,65 +724,64 @@ void MainWindow::rename(){
 
         ui->btn_rename->setVisible(true);
 
-        int ind_marked = ui->ls_fm->currentRow();
-        if(ind_marked > -1){
+        //int ind_marked = ui->ls_fm->currentRow();
+        //if(ind_marked > -1){
 
-            QString rename_marked = ui->ls_fm->currentItem()->text();
-            bool ok;
+        QString rename_marked = ui->ls_fm->currentItem()->text();
+        bool ok;
 
-            QString new_name = QInputDialog::getText(this, "enter new name", "new name: ",QLineEdit::Normal,rename_marked, &ok);
+        QString new_name = QInputDialog::getText(this, "enter new name", "new name: ",QLineEdit::Normal,rename_marked, &ok);
 
-            if(ok && !new_name.isEmpty()){
-                QFile out_tmp("../tmp.txt");
-                QFile file_fm(path_fm);
-                    if(!file_fm.open(QFile::ReadOnly | QFile::Text)){
-                        //QMessageBox::warning(this,"..","keine datei gefunden");
-                        return;
-                    }
-
-                     if(!out_tmp.open(QFile::WriteOnly | QFile::Text)){
-                         //QMessageBox::warning(this,"..","keine datei gefunden");
-                         return;
-                     }
-
-                QTextStream in_file_fm(&file_fm);
-                QTextStream out(&out_tmp);
-                QStringList unsort_rename_fm;
-
-                    while(!in_file_fm.atEnd()){
-                        QString line = in_file_fm.readLine();                        
-                        QStringList line_split = line.split(",");
-                        if(line_split.at(0) == rename_marked){
-
-                        QString outline = new_name + "," + line_split.at(1);                                
-                            unsort_rename_fm.append(outline);
-                        } else {
-                        QString outline = line;                                
-                            unsort_rename_fm.append(outline);
-                        }
-                    }
-
-                QStringList list {MainWindow::sort_list(unsort_rename_fm)};
-
-                foreach(QString fm_line_sort, list){
-                    out << fm_line_sort << "\n";
-                }
-
-                file_fm.close();
-                out_tmp.flush();
-                out_tmp.close();
-
-                file_fm.remove();
-                out_tmp.rename(path_fm);
-
-                ui->ls_fm->clear();
-
-                //mute RADIO stream, else deleted entry is still active
-                //QProcess::execute("/opt/bin/mediaclient -m RADIO -g on");
-
-                MainWindow::fill_list();
-                MainWindow::fm_list();
+        if(ok && !new_name.isEmpty()){
+            QFile out_tmp("../tmp.txt");
+            QFile file_fm(path_fm);
+            if(!file_fm.open(QFile::ReadOnly | QFile::Text)){
+                //QMessageBox::warning(this,"..","keine datei gefunden");
+                return;
             }
+
+            if(!out_tmp.open(QFile::WriteOnly | QFile::Text)){
+                 //QMessageBox::warning(this,"..","keine datei gefunden");
+                return;
+            }
+
+            QTextStream in_file_fm(&file_fm);
+            QTextStream out(&out_tmp);
+            QStringList unsort_rename_fm;
+
+            while(!in_file_fm.atEnd()){
+                QString line = in_file_fm.readLine();
+                QStringList line_split = line.split(",");
+                if(line_split.at(0) == rename_marked){
+
+                QString outline = new_name + "," + line_split.at(1);
+                    unsort_rename_fm.append(outline);
+                } else {
+                QString outline = line;
+                    unsort_rename_fm.append(outline);
+                }
+            }
+
+            QStringList list {MainWindow::sort_list(unsort_rename_fm)};
+
+            foreach(QString fm_line_sort, list){
+                out << fm_line_sort << "\n";
+            }
+
+            file_fm.close();
+            out_tmp.flush();
+            out_tmp.close();
+
+            file_fm.remove();
+            out_tmp.rename(path_fm);
+
+            ui->ls_fm->clear();
+
+            //mute RADIO stream, else deleted entry is still active
+            //QProcess::execute("/opt/bin/mediaclient -m RADIO -g on");
+
+            MainWindow::fill_list();
+            MainWindow::fm_list();
         }
     }
 }
